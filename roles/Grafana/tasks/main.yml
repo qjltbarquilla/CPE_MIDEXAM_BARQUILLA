@@ -1,0 +1,47 @@
+---
+
+- name: Install pre-requisites for CentOS
+  become: yes
+  when: ansible_facts['os_family'] == "RedHat"
+  yum:
+    name:
+      - https://packages.grafana.com/oss/release/grafana-8.5.0-1.x86_64.rpm
+      - epel-release
+    state: present
+
+- name: Install Grafana on CentOS
+  become: yes
+  when: ansible_facts['os_family'] == "RedHat"
+  yum:
+    name: grafana
+    state: present
+
+- name: Install pre-requisites for Ubuntu
+  become: yes
+  when: ansible_facts['os_family'] == "Debian"
+  apt:
+    name:
+      - software-properties-common
+    state: present
+
+- name: Add Grafana APT repository (Ubuntu)
+  become: yes
+  when: ansible_facts['os_family'] == "Debian"
+  apt_repository:
+    repo: "deb https://packages.grafana.com/oss/release/deb stable main"
+    state: present
+
+- name: Install Grafana on Ubuntu
+  become: yes
+  when: ansible_facts['os_family'] == "Debian"
+  apt:
+    name: grafana
+    state: present
+    update_cache: yes
+
+- name: Enable and start Grafana service
+  become: yes
+  service:
+    name: grafana-server
+    enabled: yes
+    state: started

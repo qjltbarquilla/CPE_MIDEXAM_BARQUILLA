@@ -1,0 +1,50 @@
+---
+
+- name: Necessary packages for Ubuntu
+  when: ansible_facts['os_family'] == "Debian"
+  apt:
+    name:
+      - nagios3
+      - nagios-plugins
+      - apache2
+      - apache2-utils
+    update_cache: yes
+    state: present
+
+- name: Enable and start Nagios service in Ubuntu
+  when: ansible_facts['os_family'] == "Debian"
+  service:
+    name: nagios3
+    enabled: yes
+    state: started
+
+- name: Enable and start Apache service in Ubuntu
+  when: ansible_facts['os_family'] == "Debian"
+  service:
+    name: apache2
+    enabled: yes
+    state: started
+
+- name: Install htpasswd for Ubuntu
+  apt:
+    name: apache2-utils
+    state: present
+  when: ansible_os_family == 'Debian'
+  register: htpasswd_install_ubuntu
+  ignore_errors: yes
+
+- name: Fail if htpasswd installation failed
+  fail:
+    msg: "Failed to install htpasswd for Ubuntu"
+  when: ansible_os_family == 'Debian' and htpasswd_install_ubuntu is failed
+
+- name: Create Nagios username and password for Ubuntu
+  command: >
+    htpasswd -b -c {{ htpasswd_file }} {{ nagios_username }} {{ nagios_password }}
+  args:
+    creates: "{{ htpasswd_file }}"  # Prevents re-running if the file already exists
+  vars:
+    htpasswd_file: "/etc/nagios3/htpasswd.users"
+    nagios_username: "qjltbarquilla"
+    nagios_password: "sanemimegumiuzui3"
+  become: yes

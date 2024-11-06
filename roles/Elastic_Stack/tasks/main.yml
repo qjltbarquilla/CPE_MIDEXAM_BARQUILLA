@@ -1,0 +1,109 @@
+- name: Install necessary packages for RedHat
+  yum:
+    name:
+      - libcurl
+      - wget
+      - epel-release
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install necessary packages for Debian
+  apt:
+    name:
+      - apt-transport-https
+      - wget
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add Elasticsearch GPG key (RedHat)
+  rpm_key:
+    state: present
+    key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+  when: ansible_os_family == "RedHat"
+
+- name: Add Elasticsearch GPG key (Debian)
+  apt_key:
+    url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add Elasticsearch repository (RedHat)
+  yum_repository:
+    name: elasticsearch-8.x
+    description: ElasticSearch repository
+    baseurl: https://artifacts.elastic.co/packages/8.x/yum
+    gpgcheck: yes
+    enabled: yes
+    gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+  when: ansible_os_family == "RedHat"
+
+- name: Add Elastic APT repository (Debian)
+  apt_repository:
+    repo: "deb https://artifacts.elastic.co/packages/8.x/apt stable main"
+    state: present
+    filename: elastic-8.x
+  when: ansible_os_family == "Debian"
+
+- name: Install Elasticsearch
+  yum:
+    name: elasticsearch
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Elasticsearch (Debian)
+  apt:
+    name: elasticsearch
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Start and enable Elasticsearch service
+  service:
+    name: elasticsearch
+    state: started
+    enabled: yes
+
+- name: Install Kibana (RedHat)
+  yum:
+    name: kibana
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Kibana (Debian)
+  apt:
+    name: kibana
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Start and enable Kibana service
+  service:
+    name: kibana
+    state: started
+    enabled: yes
+
+- name: Configure Kibana
+  template:
+    src: kibana.yml.j2
+    dest: /etc/kibana/kibana.yml
+
+- name: Restart Kibana
+  service:
+    name: kibana
+    state: restarted
+
+- name: Install Logstash (RedHat)
+  yum:
+    name: logstash
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Logstash (Debian)
+  apt:
+    name: logstash
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Start and enable Logstash service
+  service:
+    name: logstash
+    state: started
+    enabled: yes

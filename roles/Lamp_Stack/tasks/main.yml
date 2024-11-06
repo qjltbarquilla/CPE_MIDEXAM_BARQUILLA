@@ -1,0 +1,90 @@
+---
+
+- name: Install required packages for Apache, PHP, and MariaDB on Ubuntu
+  apt:
+    name:
+      - apache2
+      - php
+      - libapache2-mod-php
+      - mariadb-server
+      - php-mysql
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Install required packages for Apache, PHP, and MariaDB on CentOS
+  yum:
+    name:
+      - httpd
+      - php
+      - php-mysqlnd
+      - mariadb-server
+    state: present
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Start and enable Apache on Ubuntu
+  service:
+    name: apache2
+    enabled: yes
+    state: started
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Start and enable Apache on CentOS
+  service:
+    name: httpd
+    enabled: yes
+    state: started
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Start and enable MariaDB on Ubuntu
+  service:
+    name: mariadb
+    enabled: yes
+    state: started
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Start and enable MariaDB on CentOS
+  service:
+    name: mariadb
+    enabled: yes
+    state: started
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Secure MariaDB installation
+  shell: |
+    mysql -e "UPDATE mysql.user SET Password=PASSWORD('your_password') WHERE User='root';"
+    mysql -e "DELETE FROM mysql.user WHERE User='';"
+    mysql -e "DROP DATABASE IF EXISTS test;"
+    mysql -e "FLUSH PRIVILEGES;"
+  when: ansible_facts['os_family'] == "Debian" or ansible_facts['os_family'] == "RedHat"
+  ignore_errors: yes
+
+- name: Copy PHP info file for testing
+  copy:
+    dest: /var/www/html/info.php
+    content: |
+      <?php
+      phpinfo();
+      ?>
+  when: ansible_facts['os_family'] == "Debian" or ansible_facts['os_family'] == "RedHat"
+
+- name: Ensure firewall allows HTTP and HTTPS traffic (Ubuntu)
+  ufw:
+    rule: allow
+    name: "{{ item }}"
+  loop:
+    - 'Apache'
+    - 'OpenSSH'
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Ensure firewall allows HTTP and HTTPS traffic (CentOS)
+  firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Reload firewall (CentOS)
+  firewalld:
+    state: reloaded
+  when: ansible_facts['os_family'] == "RedHat"

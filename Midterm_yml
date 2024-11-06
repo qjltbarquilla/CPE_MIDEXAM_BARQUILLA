@@ -1,0 +1,54 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: update repository index (CentOS)
+    tags: always
+    dnf:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "CentOS"
+
+  - name: install updates (Ubuntu)
+    tags: always
+    apt:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  roles:
+    - base
+
+- hosts: all
+  become: true
+  roles:
+    - Elastic_Stack
+
+- hosts: server1
+  become: true
+  roles:
+    - Nagios
+
+- hosts: all
+  become: true
+  roles:
+    - Prometheus
+
+- hosts: all
+  become:
+  roles:
+    - Grafana
+
+- hosts: all
+  become:
+  roles:
+    - Influxdb
+
+- hosts: all
+  become:
+  roles:
+    - Lamp_Stack
